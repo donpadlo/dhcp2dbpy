@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<config>
+    <dhcpserver>
+	<host>0.0.0.0</host>
+        <broadcast>255.255.255.255</broadcast>
+        <DHCPServer>172.30.114.1</DHCPServer>
+	<LeaseTime>8600</LeaseTime>
+	<ThreadLimit>1</ThreadLimit>
+        <defaultMask>255.255.255.0</defaultMask>
+        <defaultRouter>192.168.0.1</defaultRouter>
+        <defaultDNS>8.8.8.8</defaultDNS>
+    </dhcpserver>
+    <mysql>
+        <host>localhost</host>
+	<username>donpadlo</username>
+	<password>padlopavel</password>
+	<basename>db2dhcp</basename>
+    </mysql>
+    <options>
+       <option>unknown_option_82_hex:sw_port1:8:10</option>
+       <option>unknown_option_82_hex:sw_port2:4:6</option>
+       <option>unknown_option_82_hex:sw_mac:26:40</option>
+       <option>HostName:HostNameMod:1:3</option>
+    </options>    
+    <query>
+	<offer_sql>select ip,mask,router,dns from users where mac='{sw_mac}' and port='{sw_port1}' UNION ALL select ip,mask,router,dns from users where mac='{ClientMacAddress}'</offer_sql>
+	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK')</history_sql>
+    </query>
+</config>
