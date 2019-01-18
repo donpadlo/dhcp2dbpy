@@ -12,8 +12,8 @@
     </dhcpserver>
     <mysql>
         <host>localhost</host>
-	<username>donpadlo</username>
-	<password>padlopavel</password>
+	<username>23у23у</username>
+	<password>цувцвцу</password>
 	<basename>db2dhcp</basename>
     </mysql>
     <options>
