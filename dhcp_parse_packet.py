@@ -31,16 +31,18 @@ def parsepacketIn(data,cnf,optionsMod):
     secs=data[8]*256+data[9];
     flags=pack('BB',data[10],data[11])
     ciaddr=socket.inet_ntoa(pack('BBBB',data[12],data[13],data[14],data[15]));    
-    siaddr=socket.inet_ntoa(pack('BBBB',data[16],data[17],data[18],data[19]));    
-    giaddr=socket.inet_ntoa(pack('BBBB',data[20],data[21],data[22],data[23]));   
+    yiaddr=socket.inet_ntoa(pack('BBBB',data[16],data[17],data[18],data[19]));    
+    siaddr=socket.inet_ntoa(pack('BBBB',data[20],data[21],data[22],data[23]));   
+    giaddr=socket.inet_ntoa(pack('BBBB',data[24],data[25],data[26],data[27]));   
     chaddr=data[28:34].hex()
     magic_cookie=data[236:240]    
     if gconfig["debug"]==True:print("Magic:",magic_cookie[0],magic_cookie[1],magic_cookie[2],magic_cookie[3])
-    res={"op":op,"htype":htype,"hlen":hlen,"hops":hops,"xidbyte":xidbyte,"xidhex":xidhex,"secs":secs,"flags":flags,"ciaddr":ciaddr,"siaddr":siaddr,"giaddr":giaddr,"chaddr":chaddr,"magic_cookie":magic_cookie}        
+    res={"op":op,"htype":htype,"hlen":hlen,"hops":hops,"xidbyte":xidbyte,"xidhex":xidhex,"secs":secs,"flags":flags,"ciaddr":ciaddr,"yiaddr":yiaddr,"siaddr":siaddr,"giaddr":giaddr,"chaddr":chaddr,"magic_cookie":magic_cookie}        
     res["HostName"]="unknown";
     res["ClientMacAddress"]=chaddr;
     res["ClientMacAddressByte"]=data[28:34];
     res["RequestedIpAddress"]="0.0.0.0";
+    res["option82"]="none";
     if magic_cookie==b'c\x82Sc':                
         # парсим опции
         if gconfig["debug"]==True:print("--парсим опции");
@@ -174,6 +176,16 @@ def FindOptions(data,res):
         res["NTPS"]=socket.inet_ntoa(pack('BBBB',data[res["gpoz"]+2],data[res["gpoz"]+3],data[res["gpoz"]+4],data[res["gpoz"]+5]));    
         res["gpoz"]=res["gpoz"]+ln+2;                          
         return res
+    # Option82
+    if data[res["gpoz"]]==82:                 
+        res["option82"]=data[res["gpoz"]];
+        ln=data[res["gpoz"]+1]        
+        res["option_82_len"]=ln
+        res["option_82_byte"]=data[res["gpoz"]+1:res["gpoz"]+2+ln];
+        res["option_82_hex"]=data[res["gpoz"]+1:res["gpoz"]+2+ln].hex()
+        res["option_82_str"]=str(data[res["gpoz"]+1:res["gpoz"]+2+ln])
+        res["gpoz"]=res["gpoz"]+ln+2;                          
+        return res    
     # финита ля комедиа
     if data[res["gpoz"]]==255:   
         res["gpoz"]=len(data)+1
@@ -208,12 +220,12 @@ def CreateDHCPOFFER(packet,res_sql):
     res=res+pack("BBBB",packet["xidbyte"][0],packet["xidbyte"][1],packet["xidbyte"][2],packet["xidbyte"][3]) # идентификатор посылки
     res=res+pack("BB",0,0) # сколько времени прошло?
     res=res+pack("BB",0,0) # флаги
-    res=res+pack("BBBB",0,0,0,0) # кому отсылаем (всем)
-    res=res+socket.inet_pton(socket.AF_INET, res_sql["ip"]) # какой IP предлагает
+    res=res+pack("BBBB",0,0,0,0) # кому отсылаем (всем) ciaddr
+    res=res+socket.inet_pton(socket.AF_INET, res_sql["ip"]) # какой IP предлагает yiaddr
     print ("--делаем ему DHCPOFFER",res_sql["ip"])
     pprint(gconfig["dhcp_Server"])
-    res=res+socket.inet_pton(socket.AF_INET, gconfig["dhcp_Server"]) # какой IP у DHCP сервера
-    res=res+socket.inet_pton(socket.AF_INET, "0.0.0.0") # какой Relay
+    res=res+socket.inet_pton(socket.AF_INET, "0.0.0.0") # siaddr
+    res=res+socket.inet_pton(socket.AF_INET,packet["giaddr"]) # какой Relay
     res=res+pack("BBBBBB",packet["ClientMacAddressByte"][0],packet["ClientMacAddressByte"][1],packet["ClientMacAddressByte"][2],packet["ClientMacAddressByte"][3],packet["ClientMacAddressByte"][4],packet["ClientMacAddressByte"][5]) # MAC получателя
     res=res+padding0(202);
     res=res+packet["magic_cookie"]; # магическое число
@@ -223,10 +235,14 @@ def CreateDHCPOFFER(packet,res_sql):
     res=res+pack("BB",51,4)+pack(">I",8600) # 51 опция, время жизни адреса
     res=res+pack("BB",1,4) # 1 опция Mask
     res=res+socket.inet_pton(socket.AF_INET, res_sql["mask"])
-    res=res+pack("BB",3,4) # 1 опция Router
+    res=res+pack("BB",3,4) # 3 опция Router
     res=res+socket.inet_pton(socket.AF_INET, res_sql["router"])
     res=res+pack("BB",6,4) # 6 опция DNS
     res=res+socket.inet_pton(socket.AF_INET, res_sql["DNS"])
+    if packet["option82"]!="none":        
+        res=res+pack("B",82)
+        for bb in packet["option_82_byte"]:           
+           res=res+pack("B",bb)
     res=res+pack("B",255) # END
     res=res+padding0(28);
     #print ("LEN:",len(res));
@@ -244,7 +260,7 @@ def CreateDHCPACK(packet,res_sql):
     res=res+socket.inet_pton(socket.AF_INET, res_sql["ip"]) # какой IP предлагает
     print ("--делаем ему DHCPACK",res_sql["ip"])
     res=res+socket.inet_pton(socket.AF_INET, gconfig["dhcp_Server"]) # какой IP у DHCP сервера
-    res=res+socket.inet_pton(socket.AF_INET, "0.0.0.0") # какой Relay
+    res=res+socket.inet_pton(socket.AF_INET,packet["giaddr"]) # какой Relay
     res=res+pack("BBBBBB",packet["ClientMacAddressByte"][0],packet["ClientMacAddressByte"][1],packet["ClientMacAddressByte"][2],packet["ClientMacAddressByte"][3],packet["ClientMacAddressByte"][4],packet["ClientMacAddressByte"][5]) # MAC получателя
     res=res+padding0(202);
     res=res+packet["magic_cookie"]; # магическое число
@@ -258,6 +274,10 @@ def CreateDHCPACK(packet,res_sql):
     res=res+socket.inet_pton(socket.AF_INET, res_sql["router"])
     res=res+pack("BB",6,4) # 6 опция DNS
     res=res+socket.inet_pton(socket.AF_INET, res_sql["DNS"])
+    if packet["option82"]!="none":        
+        res=res+pack("B",82)
+        for bb in packet["option_82_byte"]:           
+           res=res+pack("B",bb)    
     res=res+pack("B",255) # END
     res=res+padding0(28);    
     return res

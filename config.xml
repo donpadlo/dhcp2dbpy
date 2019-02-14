@@ -3,7 +3,7 @@
     <dhcpserver>
 	<host>0.0.0.0</host>
         <broadcast>255.255.255.255</broadcast>
-        <DHCPServer>172.30.114.1</DHCPServer>
+        <DHCPServer>192.168.0.71</DHCPServer>
 	<LeaseTime>8600</LeaseTime>
 	<ThreadLimit>1</ThreadLimit>
         <defaultMask>255.255.255.0</defaultMask>
@@ -12,15 +12,14 @@
     </dhcpserver>
     <mysql>
         <host>localhost</host>
-	<username>23у23у</username>
-	<password>цувцвцу</password>
-	<basename>db2dhcp</basename>
+	<username>root</username>
+	<password>ssssssssssss</password>
+	<basename>pydhcp</basename>
     </mysql>
     <options>
-       <option>unknown_option_82_hex:sw_port1:8:10</option>
-       <option>unknown_option_82_hex:sw_port2:4:6</option>
-       <option>unknown_option_82_hex:sw_mac:26:40</option>
-       <option>HostName:HostNameMod:1:3</option>
+       <option>option_82_hex:sw_port1:12:14</option>
+       <option>option_82_hex:sw_port2:4:6</option>
+       <option>option_82_hex:sw_mac:26:40</option>
     </options>    
     <query>
 	<offer_sql>select ip,mask,router,dns from users where mac='{sw_mac}' and port='{sw_port1}' UNION ALL select ip,mask,router,dns from users where mac='{ClientMacAddress}'</offer_sql>

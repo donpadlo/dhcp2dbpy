@@ -118,23 +118,26 @@ def SQLInsert(sql,packet,conn):
 def PacketWork(data,addr): 
     global gconfig
     packet=dhcp_parse_packet.parsepacketIn(data,gconfig,optionsMod) # парсим содержимое пакета в читабельный вид
+    if gconfig["debug"]==True: print("##################################################################################");
     print("--пришел пакет ",packet["op"]," на 67 порт,от ",packet["ClientMacAddress"],",",packet["HostName"],",",addr)
-    #if gconfig["debug"]==True:        
-        #pprint(packet)            
-        #pprint(addr)      
+    if gconfig["debug"]==True:        
+        pprint(packet)            
+        pprint(addr)      
     try:
             conn = mysql.connector.connect(host=gconfig["mysql_host"],database=gconfig["mysql_basename"],user=gconfig["mysql_username"],password=gconfig["mysql_password"])
-            if gconfig["debug"]==True:  pprint(conn)                    
+            if gconfig["debug"]==True and packet["op"]!="DHCPINFORM":  pprint(conn)                    
             # здесь соединение с MySQL уже есть..        
             if packet["op"]=="DHCPDISCOVER":                     
                res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)            
                if res_sql["ip"]!="":
-                    if gconfig["debug"]==True:print("--что нужно ответить этому товарищу...");
+                    if gconfig["debug"]==True:print("--широковещательный поиск DHCP сервера...");
                     packetoffer=dhcp_parse_packet.CreateDHCPOFFER(packet,res_sql)        
-                    #if gconfig["debug"]==True: pprint(packetoffer)
+                    if gconfig["debug"]==True: 
+                     pprint(packetoffer)
+                     pprint(dhcp_parse_packet.parsepacketIn(packetoffer,gconfig,optionsMod))
                     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                     rz=udp_socket.sendto(packetoffer, (gconfig["broadcast"],68))
-                    if gconfig["debug"]==True:print("-ответили!");
+                    if gconfig["debug"]==True:print("-ответили DHCPOFFER (предложение)!");
                else:        
                 print ("-- IP не нашли в БД, предлагать нечего..");                    
             if packet["op"]=="DHCPREQUEST":        
@@ -142,10 +145,13 @@ def PacketWork(data,addr):
                if res_sql["ip"]!="":                
                     res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)                                
                     if gconfig["debug"]==True:
-                        print ("-- ура, господин выбрал меня любимой женой..и запрашивает IP адрес, который я уже предлагал..");
+                        print ("-- (DHCPREQUEST) устройство запросило у меня IP адрес....");
                         print (packet["RequestedIpAddress"])
                     packetack=dhcp_parse_packet.CreateDHCPACK(packet,res_sql)
-                    #if gconfig["debug"]==True:pprint(packetack)
+                    if gconfig["debug"]==True:
+                     pprint(packetack)
+                     pprint(dhcp_parse_packet.parsepacketIn(packetack,gconfig,optionsMod))
+                     print ("-- (DHCPACK) ответил ему бродкастом....");
                     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                     rz=udp_socket.sendto(packetack, (gconfig["broadcast"],68))        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
