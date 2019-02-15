@@ -12,12 +12,12 @@
     </dhcpserver>
     <mysql>
         <host>localhost</host>
-	<username>root</username>
-	<password>wedwed</password>
+	<username>test</username>
+	<password>test</password>
 	<basename>pydhcp</basename>
     </mysql>
     <options>
-       <option>option_82_hex:sw_port1:12:14</option>
+       <option>option_82_hex:sw_port1:20:22</option>
        <option>option_82_hex:sw_port2:4:6</option>
        <option>option_82_hex:sw_mac:26:40</option>
     </options>    

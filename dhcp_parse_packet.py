@@ -211,8 +211,9 @@ def padding0(cnt):
     return res    
 # Собираем предложение DHCPOFFER
 def CreateDHCPOFFER(packet,res_sql):
-    if gconfig["debug"]==True:
-     print("---собираемся отвечать..")
+    if gconfig["debug"]==True: print("---собираемся отвечать..")
+    print ("--делаем ему DHCPOFFER",res_sql["ip"])
+    pprint(gconfig["dhcp_Server"])    
     res=pack("B",2)     # тип ответа 
     res=res+pack("B",1) # тип железа Ethernet
     res=res+pack("B",6) # длина мас адреса
@@ -222,13 +223,12 @@ def CreateDHCPOFFER(packet,res_sql):
     res=res+pack("BB",0,0) # флаги
     res=res+pack("BBBB",0,0,0,0) # кому отсылаем (всем) ciaddr
     res=res+socket.inet_pton(socket.AF_INET, res_sql["ip"]) # какой IP предлагает yiaddr
-    print ("--делаем ему DHCPOFFER",res_sql["ip"])
-    pprint(gconfig["dhcp_Server"])
     res=res+socket.inet_pton(socket.AF_INET, "0.0.0.0") # siaddr
     res=res+socket.inet_pton(socket.AF_INET,packet["giaddr"]) # какой Relay
     res=res+pack("BBBBBB",packet["ClientMacAddressByte"][0],packet["ClientMacAddressByte"][1],packet["ClientMacAddressByte"][2],packet["ClientMacAddressByte"][3],packet["ClientMacAddressByte"][4],packet["ClientMacAddressByte"][5]) # MAC получателя
     res=res+padding0(202);
     res=res+packet["magic_cookie"]; # магическое число
+    ##### ОПЦИИ ####################
     res=res+pack("BBB",53,1,2) # 53 опция, обозначем, что это пакет OFFER (предложение)
     res=res+pack("BB",54,4) # 54 опция, кто дает адрес?
     res=res+socket.inet_pton(socket.AF_INET, gconfig["dhcp_Server"])
