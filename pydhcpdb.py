@@ -144,7 +144,8 @@ def PacketWork(data,addr):
                     if gconfig["debug"]==True:print("-ответили DHCPOFFER (предложение)!");
                     #а если есть получатель, то  и конкретно ему..
                     if packet["giaddr"]!="0.0.0.0":
-                        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                        udp_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                        #udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
                         rz=udp_socket.sendto(packetoffer, (packet["giaddr"],67))        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
                     
@@ -167,7 +168,8 @@ def PacketWork(data,addr):
                     rz=udp_socket.sendto(packetack, (gconfig["broadcast"],68))        
                     #а если есть получатель, то  и конкретно ему..
                     if packet["giaddr"]!="0.0.0.0":
-                        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                        udp_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                        #udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
                         rz=udp_socket.sendto(packetack, (packet["giaddr"],67))        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
                else:        

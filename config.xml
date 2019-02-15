@@ -17,12 +17,11 @@
 	<basename>pydhcp</basename>
     </mysql>
     <options>
-       <option>option_82_hex:sw_port1:20:22</option>
-       <option>option_82_hex:sw_port2:4:6</option>
+       <option>option_82_hex:sw_port1:20:22</option>       
        <option>option_82_hex:sw_mac:26:40</option>
     </options>    
     <query>
-	<offer_sql>select ip,mask,router,dns from users where mac='{sw_mac}' and port='{sw_port1}' UNION ALL select ip,mask,router,dns from users where mac='{ClientMacAddress}'</offer_sql>
+	<offer_sql>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port1}') UNION ALL select ip,mask,router,dns from users where upper(mac)=upper('{ClientMacAddress}')</offer_sql>
 	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK/INFORM')</history_sql>
     </query>
 </config>
