@@ -13,7 +13,7 @@
     <mysql>
         <host>localhost</host>
 	<username>root</username>
-	<password>ssssssssssss</password>
+	<password>wedwed</password>
 	<basename>pydhcp</basename>
     </mysql>
     <options>
@@ -23,6 +23,6 @@
     </options>    
     <query>
 	<offer_sql>select ip,mask,router,dns from users where mac='{sw_mac}' and port='{sw_port1}' UNION ALL select ip,mask,router,dns from users where mac='{ClientMacAddress}'</offer_sql>
-	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK')</history_sql>
+	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK/INFORM')</history_sql>
     </query>
 </config>

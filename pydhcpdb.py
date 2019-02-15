@@ -127,6 +127,9 @@ def PacketWork(data,addr):
             conn = mysql.connector.connect(host=gconfig["mysql_host"],database=gconfig["mysql_basename"],user=gconfig["mysql_username"],password=gconfig["mysql_password"])
             if gconfig["debug"]==True and packet["op"]!="DHCPINFORM":  pprint(conn)                    
             # здесь соединение с MySQL уже есть..        
+            if packet["op"]=="DHCPINFORM":        
+                #просто запишем для истории 
+                res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
             if packet["op"]=="DHCPDISCOVER":                     
                res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)            
                if res_sql["ip"]!="":
@@ -135,9 +138,16 @@ def PacketWork(data,addr):
                     if gconfig["debug"]==True: 
                      pprint(packetoffer)
                      pprint(dhcp_parse_packet.parsepacketIn(packetoffer,gconfig,optionsMod))
+                    #сначала бродкаст                      
                     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                     rz=udp_socket.sendto(packetoffer, (gconfig["broadcast"],68))
                     if gconfig["debug"]==True:print("-ответили DHCPOFFER (предложение)!");
+                    #а если есть получатель, то  и конкретно ему..
+                    if packet["giaddr"]!="0.0.0.0":
+                        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                        rz=udp_socket.sendto(packetoffer, (packet["giaddr"],67))        
+                    res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
+                    
                else:        
                 print ("-- IP не нашли в БД, предлагать нечего..");                    
             if packet["op"]=="DHCPREQUEST":        
@@ -152,8 +162,13 @@ def PacketWork(data,addr):
                      pprint(packetack)
                      pprint(dhcp_parse_packet.parsepacketIn(packetack,gconfig,optionsMod))
                      print ("-- (DHCPACK) ответил ему бродкастом....");
+                    #сначала бродкаст 
                     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                     rz=udp_socket.sendto(packetack, (gconfig["broadcast"],68))        
+                    #а если есть получатель, то  и конкретно ему..
+                    if packet["giaddr"]!="0.0.0.0":
+                        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                        rz=udp_socket.sendto(packetack, (packet["giaddr"],67))        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
                else:        
                 print ("-- IP не нашли в БД, отвечать нечего ..");                    
