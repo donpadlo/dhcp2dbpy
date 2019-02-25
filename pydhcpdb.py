@@ -146,7 +146,7 @@ def PacketWork(data,addr):
                     if packet["giaddr"]!="0.0.0.0":
                         udp_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                         #udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-                        rz=udp_socket.sendto(packetoffer, (packet["giaddr"],67))        
+                        rz=udp_socket.sendto(packetoffer, addr)        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
                     
                else:        
@@ -170,7 +170,7 @@ def PacketWork(data,addr):
                     if packet["giaddr"]!="0.0.0.0":
                         udp_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                         #udp_socket.setsockopt(socket.SOL_SOCKET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-                        rz=udp_socket.sendto(packetack, (packet["giaddr"],67))        
+                        rz=udp_socket.sendto(packetack, addr)        
                     res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
                else:        
                 print ("-- IP не нашли в БД, отвечать нечего ..");                    
@@ -191,7 +191,7 @@ udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
 udp_socket.bind((gconfig["dhcp_host"],67))
 
 while True:
-    data, addr = udp_socket.recvfrom(65000)
+    data, addr = udp_socket.recvfrom(1024)
     if gconfig["debug"]==True:print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Новый UDP пакет пришел !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")    
     thread = threading.Thread(target=PacketWork, args=(data,addr,)).start()	
     while threading.active_count() >gconfig["dhcp_ThreadLimit"]:
