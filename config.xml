@@ -18,10 +18,14 @@
     </mysql>
     <options>
        <option>option_82_hex:sw_port1:20:22</option>       
+       <option>option_82_hex:sw_port2:16:18</option>       
        <option>option_82_hex:sw_mac:26:40</option>
     </options>    
     <query>
-	<offer_sql>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port1}') UNION ALL select ip,mask,router,dns from users where upper(mac)=upper('{ClientMacAddress}')</offer_sql>
+        <offer_count>3</offer_count>
+	<offer_1>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port1}')</offer_1>
+        <offer_2>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port2}')</offer_2>
+        <offer_3>select ip,mask,router,dns from users where upper(mac)=upper('{ClientMacAddress}')</offer_3>
 	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK/INFORM')</history_sql>
     </query>
 </config>

@@ -46,8 +46,10 @@ def ParseConfigXML():
         gconfig["dhcp_defaultRouter"]=elem.getElementsByTagName("defaultRouter")[0].firstChild.data              
         gconfig["dhcp_defaultDNS"]=elem.getElementsByTagName("defaultDNS")[0].firstChild.data              
     qconfig=tree.getElementsByTagName("query")
-    for elem in qconfig:        
-        gconfig["offer_sql"]=elem.getElementsByTagName("offer_sql")[0].firstChild.data      
+    for elem in qconfig:  
+        gconfig["offer_count"]=elem.getElementsByTagName("offer_count")[0].firstChild.data                          
+        for num in range(int(gconfig["offer_count"])):
+            gconfig["offer_"+str(num+1)]=elem.getElementsByTagName("offer_"+str(num+1))[0].firstChild.data      
         gconfig["history_sql"]=elem.getElementsByTagName("history_sql")[0].firstChild.data                          
     options=tree.getElementsByTagName("options")       
     for elem in options:          
@@ -103,6 +105,13 @@ def GetSQLQuery(sql,packet,conn):
  if gconfig["debug"]==True:             
     print ("Результат:",res)         
  return res
+def GetIp(packet,conn):
+    res_sql={}
+    res_sql["ip"]="";
+    for num in range(int(gconfig["offer_count"])):
+     if res_sql["ip"]=="": 
+      res_sql=GetSQLQuery(gconfig["offer_"+str(num+1)],packet,conn)
+    return res_sql
 # Вставляем в таблицу истории выдачи IP
 def SQLInsert(sql,packet,conn):
  global gconfig    
@@ -131,7 +140,8 @@ def PacketWork(data,addr):
                 #просто запишем для истории 
                 res_sql_ins=SQLInsert(gconfig["history_sql"],packet,conn)
             if packet["op"]=="DHCPDISCOVER":                     
-               res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)            
+               #пробуем полуить IP из базы 
+               res_sql=GetIp(packet,conn)           
                if res_sql["ip"]!="":
                     if gconfig["debug"]==True:print("--широковещательный поиск DHCP сервера...");
                     packetoffer=dhcp_parse_packet.CreateDHCPOFFER(packet,res_sql)        
@@ -152,9 +162,11 @@ def PacketWork(data,addr):
                else:        
                 print ("-- IP не нашли в БД, предлагать нечего..");                    
             if packet["op"]=="DHCPREQUEST":        
-               res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)            
+               #пробуем полуить IP из базы 
+               res_sql=GetIp(packet,conn)           
                if res_sql["ip"]!="":                
-                    res_sql=GetSQLQuery(gconfig["offer_sql"],packet,conn)                                
+                    #пробуем полуить IP из базы 
+                    res_sql=GetIp(packet,conn)           
                     if gconfig["debug"]==True:
                         print ("-- (DHCPREQUEST) устройство запросило у меня IP адрес....");
                         print (packet["RequestedIpAddress"])
