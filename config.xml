@@ -23,7 +23,7 @@
     </options>    
     <query>
         <offer_count>3</offer_count>
-	<offer_1>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port1}')</offer_1>
+	<offer_1>select ip,mask,router,dns from users where upper(mac)=upper('{option_82_AgentRemoteId_hex}') and upper(port)=upper('{option_82_AgentCircuitId_port_hex}')</offer_1>
         <offer_2>select ip,mask,router,dns from users where upper(mac)=upper('{sw_mac}') and upper(port)=upper('{sw_port2}')</offer_2>
         <offer_3>select ip,mask,router,dns from users where upper(mac)=upper('{ClientMacAddress}')</offer_3>
 	<history_sql>insert into history (id,dt,mac,ip,comment) values (null,now(),'{ClientMacAddress}','{RequestedIpAddress}','DHCPACK/INFORM')</history_sql>

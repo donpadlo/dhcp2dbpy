@@ -180,6 +180,11 @@ def FindOptions(data,res):
     if data[res["gpoz"]]==82:                 
         res["option82"]=data[res["gpoz"]];
         ln=data[res["gpoz"]+1]        
+        res["option_82_AgentCircuitId_len"]=data[res["gpoz"]+3];
+        res["option_82_AgentCircuitId_hex"]=data[res["gpoz"]+4:res["gpoz"]+4+res["option_82_AgentCircuitId_len"]].hex();
+        res["option_82_AgentCircuitId_port_hex"]=data[res["gpoz"]+3+res["option_82_AgentCircuitId_len"]:res["gpoz"]+4+res["option_82_AgentCircuitId_len"]].hex();
+        res["option_82_AgentRemoteId_len"]=data[res["gpoz"]+5+res["option_82_AgentCircuitId_len"]];
+        res["option_82_AgentRemoteId_hex"]=data[res["gpoz"]+6+res["option_82_AgentCircuitId_len"]:res["gpoz"]+6+res["option_82_AgentCircuitId_len"]+res["option_82_AgentRemoteId_len"]].hex();
         res["option_82_len"]=ln
         res["option_82_byte"]=data[res["gpoz"]+1:res["gpoz"]+2+ln];
         res["option_82_hex"]=data[res["gpoz"]+1:res["gpoz"]+2+ln].hex()
