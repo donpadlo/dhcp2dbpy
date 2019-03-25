@@ -19,31 +19,28 @@ def parsepacketIn(data,cnf,optionsMod):
  gconfig=cnf #устанавливаем признак DEBUG
  try:
     if gconfig["debug"]==True:print("Len data:",len(data))
-    op="unknown"
-    if data[0]==1: op="DHCPDISCOVER/DHCPREQUEST";
-    if data[0]==2: op="DHCPOFFER/DHCPACK";    
-    if data[1]==1: htype="MAC" 
-    else : htype="unknown"    
-    hlen=data[2]
-    hops=data[3]
-    xidhex=data[4:8].hex()
-    xidbyte=data[4:8]
-    secs=data[8]*256+data[9];
-    flags=pack('BB',data[10],data[11])
-    ciaddr=socket.inet_ntoa(pack('BBBB',data[12],data[13],data[14],data[15]));    
-    yiaddr=socket.inet_ntoa(pack('BBBB',data[16],data[17],data[18],data[19]));    
-    siaddr=socket.inet_ntoa(pack('BBBB',data[20],data[21],data[22],data[23]));   
-    giaddr=socket.inet_ntoa(pack('BBBB',data[24],data[25],data[26],data[27]));   
-    chaddr=data[28:34].hex()
-    magic_cookie=data[236:240]    
-    if gconfig["debug"]==True:print("Magic:",magic_cookie[0],magic_cookie[1],magic_cookie[2],magic_cookie[3])
-    res={"op":op,"htype":htype,"hlen":hlen,"hops":hops,"xidbyte":xidbyte,"xidhex":xidhex,"secs":secs,"flags":flags,"ciaddr":ciaddr,"yiaddr":yiaddr,"siaddr":siaddr,"giaddr":giaddr,"chaddr":chaddr,"magic_cookie":magic_cookie}        
+    res={}    
+    if data[0]==1: res["op"]="DHCPDISCOVER/DHCPREQUEST";
+    if data[0]==2: res["op"]="DHCPOFFER/DHCPACK";    
+    if data[1]==1: res["htype"]="MAC" 
+    res["hlen"]=data[2]
+    res["hops"]=data[3]
+    res["xidhex"]=data[4:8].hex()
+    res["xidbyte"]=data[4:8]
+    res["secs"]=data[8]*256+data[9];
+    res["flags"]=pack('BB',data[10],data[11])
+    res["ciaddr"]=socket.inet_ntoa(pack('BBBB',data[12],data[13],data[14],data[15]));    
+    res["yiaddr"]=socket.inet_ntoa(pack('BBBB',data[16],data[17],data[18],data[19]));    
+    res["siaddr"]=socket.inet_ntoa(pack('BBBB',data[20],data[21],data[22],data[23]));   
+    res["giaddr"]=socket.inet_ntoa(pack('BBBB',data[24],data[25],data[26],data[27]));   
+    res["chaddr"]=data[28:34].hex()
+    res["magic_cookie"]=data[236:240]    
     res["HostName"]="unknown";
-    res["ClientMacAddress"]=chaddr;
+    res["ClientMacAddress"]=res["chaddr"];
     res["ClientMacAddressByte"]=data[28:34];
     res["RequestedIpAddress"]="0.0.0.0";
     res["option82"]="none";
-    if magic_cookie==b'c\x82Sc':                
+    if res["magic_cookie"]==b'c\x82Sc':                
         # парсим опции
         if gconfig["debug"]==True:print("--парсим опции");
         options=data[240:len(data)]
