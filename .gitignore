@@ -1,3 +1,5 @@
 /totma.xml
 /__pycache__/
 /nbproject/
+*.pyo
+*.pyc
